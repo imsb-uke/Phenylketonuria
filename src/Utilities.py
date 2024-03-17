@@ -7,6 +7,43 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 
+def read_experiments(exp):
+
+    cols_1 = ["BLANK", 25, 50, 75, 100, 125, 150, 200, 500, 750, 1250, 2500]
+    cols_1 = [str(col) for col in cols_1]
+    cols_2 = ["0.0","24.1","48.2","72.3","96.4","120.5","144.6","192.8","482.1","723.1","1205.2","2410.3"]
+    cols_2 = [str(col) for col in cols_2]
+    cols_final = [0, 25, 50, 75, 100, 125, 150, 200, 500, 750, 1250, 2500]
+    
+    rows = [0, 10, 25, 50, 75, 100, 150, 250]
+    rows = [int(row) for row in rows]
+    
+    dict_data = {}
+    wbs = [file for file in os.listdir(exp) if ".xlsm" in file]
+    
+    for wb in tqdm(wbs):
+        fp = os.path.join(exp, wb)
+        xl = pd.ExcelFile(fp)
+        sheets = [sheet for sheet in xl.sheet_names if "-av" in sheet]
+        exp_name = wb.split("_")[1].split(".")[0]
+        dict_data[exp_name] = {}
+        for sheet in sheets:
+            df = pd.read_excel(fp, sheet_name=sheet, skiprows=4)
+            mask = np.column_stack([df[col].astype(str).str.contains("BLANK", na=False) for col in df])
+            if mask.any():
+                cols = cols_1
+            else:
+                cols = cols_2
+            df.columns = [str(col) for col in df.columns]
+            df = df[cols]
+            df = df.dropna()
+            exps = [df.iloc[0:8], df.iloc[9:17], df.iloc[18:26], df.iloc[27:35]]
+            for i in range(len(exps)):
+                exps[i].index = rows  
+                exps[i].columns = cols_final
+            dict_data[exp_name][sheet.split("-av")[0]] = exps
+
+    return dict_data
 
 
 def transform_df(df, max_wt, rescale=True):
