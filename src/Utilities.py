@@ -5,8 +5,10 @@ from scipy.interpolate import LinearNDInterpolator, RegularGridInterpolator
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from tqdm import tqdm
 
 
+## read experiment files
 def read_experiments(exp):
 
     cols_1 = ["BLANK", 25, 50, 75, 100, 125, 150, 200, 500, 750, 1250, 2500]
@@ -46,6 +48,7 @@ def read_experiments(exp):
     return dict_data
 
 
+## Transform df z, y, z
 def transform_df(df, max_wt, rescale=True):
     avgs = df.unstack().reset_index(level=[0, 1])
     avgs.columns = ["Phe", "BH4", "Enzyme Activity"]
@@ -60,6 +63,7 @@ def transform_df(df, max_wt, rescale=True):
     return x, y, z
 
 
+## Plot the landscape
 def plot_landscape(
     x,
     y,
@@ -230,6 +234,7 @@ def plot_landscape(
     return output_vals
 
 
+## 2D Gaussian model
 def gaussian_2d(xy, a, mx, my, sx, sy):
     x, y = xy
     z = a * np.exp( - 0.5 * ( ((x-mx)**2 / (sx**2)) + ((y-my)**2 / (sy**2)) ) )
