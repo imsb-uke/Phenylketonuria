@@ -57,7 +57,9 @@ non_responders = c(
   "IVS10-11G",    #>A/IVS10-11G>A
   "P281L-P281L",
   "P281L-R408W",
-  "P281L-IVS10" #-11G>A
+  "P281L-IVS10", #-11G>A
+  "IVS10-IS10",
+  "IVS10-R408W"
 )
 
 
@@ -75,7 +77,7 @@ text(data$rmse[plotext],
      cex = .5)
 
 plot(data$rmse, data$var1, pch = 19, col = col, ylim = c(0, .6))
-plotext = (data$var1 > .19) & !(data$genotype %in% non_responders) & !(data$genotype %in% "WT")
+plotext = (data$var1 > .15) & !(data$genotype %in% non_responders) & !(data$genotype %in% "WT")
 text(data$rmse[plotext], 
      data$var1[plotext] + runif(sum(plotext),-.01, .01), 
      data$genotype[plotext],
