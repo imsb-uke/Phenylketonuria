@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1
+    Version 1.0.0 (needs Utilities.py)
     Authors: 
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
