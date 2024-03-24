@@ -19,15 +19,25 @@ def read_experiments(exp):
     
     rows = [0, 10, 25, 50, 75, 100, 150, 250]
     rows = [int(row) for row in rows]
-    
+
+    # the output file is a dict.
     dict_data = {}
-    wbs = [file for file in os.listdir(exp) if ".xlsm" in file]
+
+    # if exp is a directory, list all *.xlsm files
+    # if exp is a file, it consider only that one
+    if os.path.isdir(exp):
+        fps = [os.path.join(exp, file) for file in os.listdir(exp) if ".xlsm" in file]
+    else:
+        if ".xlsm" in exp:
+            fps = [exp]
+        else:
+            raise ValueError("The file should be *.xlsm")
     
-    for wb in tqdm(wbs):
-        fp = os.path.join(exp, wb)
+    for fp in tqdm(fps):
+        # fp = os.path.join(exp, wb)
         xl = pd.ExcelFile(fp)
         sheets = [sheet for sheet in xl.sheet_names if "-av" in sheet]
-        exp_name = wb.split("_")[1].split(".")[0]
+        exp_name = fp.split("/")[-1].split("_")[1].split(".")[0]
         dict_data[exp_name] = {}
         for sheet in sheets:
             df = pd.read_excel(fp, sheet_name=sheet, skiprows=4)
@@ -240,5 +250,10 @@ def gaussian_2d(xy, a, mx, my, sx, sy):
     z = a * np.exp( - 0.5 * ( ((x-mx)**2 / (sx**2)) + ((y-my)**2 / (sy**2)) ) )
     return z
 
+## Reshape experiment table
+def reshape(a):
+    a = np.array(a, dtype=float)
+    a[a<0]=0
+    return np.log(a+1).reshape(-1,1)
 
 eps = 0.000001
