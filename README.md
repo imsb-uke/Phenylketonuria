@@ -1,6 +1,4 @@
-Under development
-
-# Phenylketonuria landscape analysis
+# Phenylketonuria landscape analysis v 1.5
 
 Pipeline:
 1. Apply Gaussian model and extract features
