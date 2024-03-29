@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.0.1 (stand alone version)
+    Version 1.5.1 (stand alone version)
     Authors: 
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -17,6 +17,7 @@
 import os
 from tqdm import tqdm
 import argparse
+import json
 
 import pandas as pd
 import numpy as np
@@ -269,6 +270,118 @@ def plot_landscape(
     return output_vals
 
 
+## Plot the 3D map
+def plot_3d_map(
+    x,
+    y,
+    z,
+    name,
+    method="regular_grid",
+    show=False,
+    save=True,
+    save_dir = "",
+    nbins=1000,
+    elev=30,
+    azim=-120,
+    rescale=True,
+    max_val_scale=None,
+    legend=[True, True, True, True],
+):
+    x_dense = np.linspace(0, x.max(), nbins)
+    y_dense = np.linspace(0, y.max(), nbins)
+    B1, B2 = np.meshgrid(x_dense, y_dense, indexing="xy")
+    dense_points = np.stack([B1.ravel(), B2.ravel()], -1)  # shape (N, 2) in 2d
+
+    try:
+        if method == "linear_ndi":
+            scattered_points = np.stack(
+                [x.ravel(), y.ravel()], -1
+            )  # shape (N, 2) in 2d
+            smooth_z = LinearNDInterpolator(
+                scattered_points,
+                z.ravel(),
+                rescale=True,
+                fill_value=0.0,
+            )
+            z_smoothed = smooth_z(dense_points).reshape(B1.shape)
+            z_smoothed = ndimage.gaussian_filter(z_smoothed, sigma=10)
+
+        if method == "regular_grid":
+            Z = z.reshape(len(np.unique(x)), len(np.unique(y)))
+            rgi = RegularGridInterpolator(
+                (np.unique(x), np.unique(y)),
+                Z,
+                method="linear",
+                bounds_error=False,
+                fill_value=0.0,
+            )
+            Z_rgi = rgi(np.array([B1.flatten(), B2.flatten()]).T).reshape(B1.shape)
+            z_smoothed = ndimage.gaussian_filter(Z_rgi, sigma=7)
+            z_smoothed[z_smoothed < 0] = 0
+            # z_smoothed[z_smoothed > 100] = 100
+
+        elif method not in ["linear_ndi", "regular_grid"]:
+            raise NotImplementedError(
+                "Smoothing method not implemented. Choose between 'regular_grid' or 'linear_ndi'."
+            )
+
+    except NotImplementedError as e:
+        print("Error: ", e)
+        sys.exit()
+
+    fig = plt.figure(figsize=(6, 5))
+    ax = fig.add_subplot(111, projection="3d")
+
+    if rescale:
+        im = ax.plot_surface(
+            B1,
+            B2,
+            z_smoothed,
+            cmap="Spectral_r",
+            vmin=0,
+            vmax=100,
+            norm=colors.PowerNorm(vmin=0, vmax=100, gamma=0.6),
+        )
+        ax.view_init(elev=elev, azim=azim)
+    else:
+        if max_val_scale is None:
+            max_val_scale = np.max(z)
+
+        im = ax.plot_surface(
+            B1,
+            B2,
+            z_smoothed,
+            cmap="Spectral_r",
+            vmin=0,
+            vmax=np.max(z),
+            norm=colors.PowerNorm(vmin=0, vmax=max_val_scale, gamma=0.6),
+            rstride=10,
+            cstride=10,
+        )
+        ax.view_init(elev=elev, azim=azim)
+
+    cbar = plt.colorbar(im, shrink=0.4, ax=ax)
+    if rescale:
+        cbar.set_label("Enzyme Activity [%]")
+    else:
+        cbar.set_label("Enzyme Activity")
+
+    ax.set_title(name)
+    ax.set_xlabel("Phe [uM]")
+    ax.set_ylabel("BH4 [uM]")
+
+    if z_smoothed.max() < 5:
+        ax.set_zlim([0, 5])
+
+    plt.tight_layout()
+
+    if save:
+        plt.savefig(os.path.join(save_dir, f"3dplot_{name}.png"))
+    if show:
+        plt.show()
+    plt.close()
+
+
 ## 2D Gaussian model
 def gaussian_2d(xy, a, mx, my, sx, sy):
     x, y = xy
@@ -286,31 +399,37 @@ if __name__ == "__main__":
 
     # Read inputs
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True, help='Input directory; either xlsm file name or a directory')
-    parser.add_argument('--save_image_dir', default="gm_output/images/", help='Directory to save images')
-    parser.add_argument('--save_feature_dir', default="gm_output/features/", help='Directory to save feature csv file')
-    parser.add_argument('--save_plot', action='store_true', help='If specified, the plots will be saved; this may significantly increase the running time')
-    parser.add_argument('--tag', default="", help='Name tag for the feature csv file')
-    parser.add_argument('--qc_thr_rmse', default=[0.2, 0.25], help='QC threshold for RMSE')
-    parser.add_argument('--qc_thr_n_peaks', default=[5, 8], help='QC threshold for N Peacks')
-    parser.add_argument('--qc_thr_variation', default=[0.1, 0.25], help='QC threshold for Variations')
+    parser.add_argument('--input_dir', required=True, help='Input directory; either xlsm file name or a directory.')
+    parser.add_argument('--param_dir', default="gm_parameters.json", help='Directory to parameters json file.')
 
-    # Set parameters
+    # Set inputs
     args = parser.parse_args()
     dir = args.input_dir
-    save_image_dir = args.save_image_dir
-    save_feature_dir = args.save_feature_dir
-    save_plot = args.save_plot
-    tag = args.tag
-    qc_thr_rmse = args.qc_thr_rmse
-    qc_thr_n_peaks = args.qc_thr_n_peaks
-    qc_thr_variation = args.qc_thr_variation
+    param_dir = args.param_dir
+
+    # set parameters
+    ## Read parameters json file and set parameters
+    with open(param_dir, 'r') as file:
+        parameters = json.load(file)
+
+    save_feature_dir = parameters['save_feature_dir']
+    save_image2d_dir = parameters['save_image2d_dir']
+    save_image3d_dir = parameters['save_image3d_dir']
+    tag = parameters['tag']
+    qc_thr_rmse = parameters['qc_thr_rmse']
+    qc_thr_n_peaks = parameters['qc_thr_n_peaks']
+    qc_thr_variation = parameters['qc_thr_variation']
+
+    save_plot2d = False if save_image2d_dir == "" else True
+    save_plot3d = False if save_image3d_dir == "" else True
 
     # mkdir the save_*_dir if not existing
-    if not os.path.exists(save_image_dir) and save_plot:
-        os.makedirs(save_image_dir)
     if not os.path.exists(save_feature_dir):
         os.makedirs(save_feature_dir)
+    if not os.path.exists(save_image2d_dir) and save_plot2d:
+        os.makedirs(save_image2d_dir)
+    if not os.path.exists(save_image3d_dir) and save_plot3d:
+        os.makedirs(save_image3d_dir)
 
     # Define the empty feature tables
     feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'Max_x', 'Max_y', 's_x', 's_y', 
@@ -352,9 +471,13 @@ if __name__ == "__main__":
             #### 3. Gaussian modelling
             ##### Get x, y, z
             x, y, z = transform_df(data, max_wt, rescale=True)
-            if save_plot:
+            if save_plot2d:
                 plot_landscape(x, y, z, name = name, 
-                               show = False, save = True, save_dir = save_image_dir)
+                               show = False, save = True, save_dir = save_image2d_dir)
+            if save_plot3d:
+                plot_3d_map(x, y, z, name = name,
+                            show=False, save=True, save_dir = save_image3d_dir)
+                
             x, y, z = np.log(x + eps), np.log(y + eps), z
     
             ##### Curve fitting
@@ -369,9 +492,12 @@ if __name__ == "__main__":
             #### 4. Calculate RMSE
             mse = np.mean((z/z.max() - z_hat/z_hat.max())**2)
             rmse = np.sqrt(mse)
-            if save_plot:
+            if save_plot2d:
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
-                              show = False, save = True, save_dir = save_image_dir)
+                              show = False, save = True, save_dir = save_image2d_dir)
+            if save_plot3d:
+                plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
+                            show=False, save=True, save_dir = save_image3d_dir)
     
     
             #### 5. QC check
