@@ -24,7 +24,12 @@ X = data.frame(
 )
 
 # Clustering
-## Clustering without scaling
+X = X[(X$x < 1400) & (X$y < 140),]
+X = data.frame(scale(X))
+
+X = X[,1:3]
+# X = X[,-6]
+
 Adj = adj_mat(X, method = "euclidian")
 CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.7, max.itter = 100, clustering.method = "pam")
 
@@ -33,39 +38,10 @@ RobScore = Scores[["LogitScore"]]
 plot(RobScore, type = "b")
 
 Kopt = Scores[["Kopt_LogitScore"]]
-message(paste0("The optimum number of clusters = ", Kopt)); # Kopt = 6
+message(paste0("The optimum number of clusters = ", Kopt));  # Kopt = 6
 pheatmap::pheatmap(CM[[Kopt]])
 
 clusters = clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
-Clusters = clusters
-
-col.pal = grDevices::rainbow(Kopt)
-scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
-          theta = 10, phi = 10, box = TRUE, colvar = clusters, col = col.pal)
-
-scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
-          theta = 0, phi = 90, box = TRUE, colvar = clusters, col = col.pal)
-
-
-## Clustering with scaling
-X_scaled = scale(X)
-
-Adj = adj_mat(X_scaled, method = "euclidian")
-CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.7, max.itter = 100, clustering.method = "pam")
-
-Scores = CC_cluster_count(CM)
-RobScore = Scores[["LogitScore"]]
-plot(RobScore, type = "b")
-
-Kopt = Scores[["Kopt_LogitScore"]]
-message(paste0("The optimum number of clusters = ", Kopt)); # Kopt = 6
-pheatmap::pheatmap(CM[[Kopt]])
-
-clusters = clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
-Clusters = cbind(Clusters, clusters)
-
-Clusters = data.frame(Clusters)
-colnames(Clusters) = c("not_scaled", "scaled")
 
 col.pal = grDevices::rainbow(Kopt)
 scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
@@ -76,6 +52,59 @@ scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples",
 
 
 # Save
-XX = cbind(data[,c("genotype", "experiment")], X, Clusters)
-write.csv(XX, "Data/Clustering_Result_v5.csv")
+XX = cbind(data[(exp(data$Max_x) < 1400) & (exp(data$Max_y) < 140),c("genotype", "experiment")], 
+           X, 
+           clusters)
+# write.csv(XX, "Data/Clustering_Result_v5.csv")
+
+###############
+{
+# Read and prepare "landscapes_overview.xlsx"
+library(readxl)
+table = read_excel("Data/20240207_landscapes_overview.xlsx")
+colnames(table)[3:ncol(table)] = table[1,3:ncol(table)]
+table = table[-1,]
+table[table == "-"] = NA
+table = data.frame(table)
+for (i in 3:ncol(table))
+  table[,i] = as.numeric(table[,i])
+for (i in 1:nrow(table)){
+  g = table$PAH.genotype[i]
+  g = strsplit(g, "-")[[1]][1]
+  g = strsplit(g, "\\+")[[1]][1]
+  g = strsplit(g, "/")[[1]]
+  if (g[1] == "WT")
+    g = "WT"
+  else
+    g = paste0(g[1], "-", g[2])
+  table$PAH.genotype[i] = g
+}
+colnames(table)[1] = "genotype"
+
+response_rate_1 = table$Yes...
+response_rate_1[is.na(response_rate_1)] = -100
+response_rate_1 = response_rate_1 / 100
+table$response_rate_1 = response_rate_1
+table$response_rate_1[response_rate_1 == -1] = NA
+
+# Merge
+# Merge the two tables
+table$genotype_exp = paste0(table$genotype, "|", table$EXPERIMENT)
+XX$genotype_exp = paste0(XX$genotype, "|", XX$experiment)
+table = merge(table, XX, by = "genotype_exp", suffixes=c("", ".y"))
+}
+
+XX = table[,c("genotype", "experiment", "x", "y", "z", "response_rate_1", "clusters")]
+c = "clusters"
+boxplot(
+  XX$response_rate_1[XX[, c] == 1],
+  XX$response_rate_1[XX[, c] == 2],
+  XX$response_rate_1[XX[, c] == 3],
+  XX$response_rate_1[XX[, c] == 4],
+  # XX$response_rate_1[XX[, c] == 5],
+  # XX$response_rate_1[XX[, c] == 6],
+  names = c(1, 2, 3, 4),
+  main = paste0("Response in clusters:", c)
+)
+
 
