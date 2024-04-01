@@ -483,7 +483,7 @@ if __name__ == "__main__":
             ##### Curve fitting
             initial_guess = (1.0, 5, 5, 2, 2)
             bounds = ([0, eps, eps, 0.5, 0.5],                       # Lower bounds
-                      [120, np.log(3000), np.log(300), 1000, 1000])  # Upper bounds 1500, 150
+                      [120, np.log(1500), np.log(150), 1000, 1000])  # Upper bounds
             popt, pcov = curve_fit(gaussian_2d, (x, y), z, p0=initial_guess, bounds=bounds)
             
             a, mx, my, sx, sy = tuple(popt)

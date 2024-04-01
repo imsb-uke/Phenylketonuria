@@ -1,6 +1,6 @@
 ## Gaussian fit analysis v3
 rm(list = ls())
-setwd("~/Desktop/R_Root/Phenylketonuria/")
+setwd("~/Desktop/My_Codes/Phenylketonuria/")
 
 
 data = read.csv("Data/extracted_features_v3.csv")

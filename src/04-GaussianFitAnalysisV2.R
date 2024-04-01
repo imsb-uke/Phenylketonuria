@@ -7,7 +7,7 @@
 # 3. Complete responders (WT samples) and complete non-responders (NA values) have also been added
 
 rm(list = ls())
-setwd("~/Desktop/R_Root/Polina/")
+setwd("~/Desktop/My_Codes/Phenylketonuria/")
 
 # Read and prepare "landscapes_overview.xlsx"
 library(readxl)
