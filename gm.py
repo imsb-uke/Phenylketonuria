@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.5.1 (stand alone version)
+    Version 1.5.2 (stand alone version)
     Authors: 
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -181,7 +181,7 @@ def plot_landscape(
     ax.set_ylim([np.min(y_dense), np.max(y_dense)])
     ax.set_xlabel("Phe [uM]")
     ax.set_ylabel("BH4 [uM]")
-    ax.set_title(f"{name}")
+    # ax.set_title(f"{name}")
 
     CS = ax.contour(
         B1, B2, z_smoothed, 5, colors=("lightgrey"), linewidths=1, origin="lower"
@@ -366,7 +366,7 @@ def plot_3d_map(
     else:
         cbar.set_label("Enzyme Activity")
 
-    ax.set_title(name)
+    # ax.set_title(name)
     ax.set_xlabel("Phe [uM]")
     ax.set_ylabel("BH4 [uM]")
 
