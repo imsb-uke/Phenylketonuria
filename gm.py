@@ -113,6 +113,7 @@ def plot_landscape(
     rescale=True,
     max_val_scale=None,
     legend=[True, True, True, True],
+    legend_vals=None
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -195,16 +196,25 @@ def plot_landscape(
 
     df = pd.DataFrame(z_smoothed, columns=x_dense, index=y_dense)
 
-    mx = np.around(df.max().max(), decimals=2)
-    bh4 = df.stack().idxmax()[0]
-    phe = df.stack().idxmax()[1]
-
-    df_tmp = df.loc[bh4, :]
-    phe_min = df_tmp[df_tmp >= mx * 0.5].index.min()
-    phe_max = df_tmp[df_tmp >= mx * 0.5].index.max()
-    df_tmp2 = df.loc[:, phe]
-    bh4_min = df_tmp2[df_tmp2 >= mx * 0.5].index.min()
-    bh4_max = df_tmp2[df_tmp2 >= mx * 0.5].index.max()
+    if legend_vals==None:
+        mx = np.around(df.max().max(), decimals=2)
+        bh4 = df.stack().idxmax()[0]
+        phe = df.stack().idxmax()[1]
+    
+        df_tmp = df.loc[bh4, :]
+        phe_min = df_tmp[df_tmp >= mx * 0.5].index.min()
+        phe_max = df_tmp[df_tmp >= mx * 0.5].index.max()
+        df_tmp2 = df.loc[:, phe]
+        bh4_min = df_tmp2[df_tmp2 >= mx * 0.5].index.min()
+        bh4_max = df_tmp2[df_tmp2 >= mx * 0.5].index.max()
+    else:
+        mx = legend_vals['Max']
+        bh4 = legend_vals['Max_y']
+        phe = legend_vals['Max_x']
+        bh4_min = legend_vals['Half_y_min']
+        bh4_max = legend_vals['Half_y_max']
+        phe_min = legend_vals['Half_x_min']
+        phe_max = legend_vals['Half_x_max']
 
     output_vals = {
         "Max": mx,
@@ -383,10 +393,38 @@ def plot_3d_map(
 
 
 ## 2D Gaussian model
-def gaussian_2d(xy, a, mx, my, sx, sy):
-    x, y = xy
+def gaussian_2d(x_y, a, mx, my, sx, sy):
+    x, y = x_y
     z = a * np.exp( - 0.5 * ( ((x-mx)**2 / (sx**2)) + ((y-my)**2 / (sy**2)) ) )
     return z
+
+
+## Half max calculation
+def half_max(max, a, mx, my, sx, sy):
+    z = max/2
+    
+    # calculate x
+    v = sx**2 * (-2 * np.log(z/a))
+    if v<0:
+        x_max, x_min = np.inf, -np.inf
+    else:
+        v = np.sqrt(v)
+        x_max = mx + v
+        x_min = mx - v
+        
+    # calculate y
+    v = sy**2 * (-2 * np.log(z/a))
+    if v<0:
+        y_max, y_min = np.inf, -np.inf
+    else:
+        v = np.sqrt(v)
+        y_max = my + v
+        y_min = my - v
+
+    x_min = x_min if x_min>0 else 0
+    y_min = y_min if y_min>0 else 0
+    return x_max, x_min, y_max, y_min
+
 
 ## Reshape experiment table
 def reshape(a):
@@ -450,7 +488,8 @@ if __name__ == "__main__":
         os.makedirs(save_image3d_dir)
 
     # Define the empty feature tables
-    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'A', 'Max_x', 'Max_y', 's_x', 's_y',
+    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'A', 'Max_x', 'Max_y', 
+                                    's_x', 's_y', 'Half_x_min', 'Half_x_max', 'Half_y_min', 'Half_y_max',
                                     'rmse', 'n_peaks', 'variation', 'qc_result'])
 
     # Read the input files as a dict
@@ -512,6 +551,24 @@ if __name__ == "__main__":
             a, mx, my, sx, sy = tuple(popt)
             z_hat = gaussian_2d((x, y), a, mx, my, sx, sy)
 
+            ##### Calculate 50% max values
+            max = np.max(z_hat)
+            x_max, x_min, y_max, y_min = half_max(max, a, mx, my, sx, sy)
+            
+            ##### Add all the values into a dictionary
+            values = {
+                'Max'        : np.round(max, 2),
+                'A'          : np.round(np.max(a), 2),
+                'Max_x'      : np.round(np.exp(mx) ,2),
+                'Max_y'      : np.round(np.exp(my) ,2),
+                's_x'        : np.round(np.exp(sx) ,2),
+                's_y'        : np.round(np.exp(sy) ,2),
+                'Half_x_min' : np.round(np.exp(x_min) ,2),
+                'Half_x_max' : np.round(np.exp(x_max) ,2),
+                'Half_y_min' : np.round(np.exp(y_min) ,2),
+                'Half_y_max' : np.round(np.exp(y_max) ,2),
+            }
+
             #### 4. Calculate RMSE
             mse = np.mean((z/z.max() - z_hat/z_hat.max())**2)
             rmse = np.sqrt(mse)
@@ -520,7 +577,7 @@ if __name__ == "__main__":
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                                show = False, save = True, save_dir = save_image2d_dir,
                                method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
-                               legend=[info_box, max_val, peak_coords, fifty_coords])
+                               legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values)
             if save_plot3d:
                 plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                             show=False, save=True, save_dir = save_image3d_dir,
@@ -536,8 +593,7 @@ if __name__ == "__main__":
                 qc_result = 'ToCheck'
 
             #### Save features
-            feature.loc[len(feature)] = [var, exp, np.max(z_hat), a, np.exp(mx), np.exp(my), np.exp(sx), np.exp(sy), 
-                                         rmse, n_peaks, variation, qc_result]
+            feature.loc[len(feature)] = [var, exp] + list(values.values()) + [rmse, n_peaks, variation, qc_result]
     # End of the loop
 
     # Save features table
