@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.6.0
+    Version 1.7.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
