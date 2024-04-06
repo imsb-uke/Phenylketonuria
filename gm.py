@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.5.3 (stand alone version)
+    Version 1.6.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -401,11 +401,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', required=True, help='Input directory; either xlsm file name or a directory.')
     parser.add_argument('--param_dir', default="gm_parameters.json", help='Directory to parameters json file.')
+    parser.add_argument('--no_plot', action='store_true', help='No plot will be created if apecified.')
 
     # Set inputs
     args = parser.parse_args()
     dir = args.input_dir
     param_dir = args.param_dir
+    no_plot = args.no_plot
 
     # set parameters
     ## Read parameters json file and set parameters
@@ -432,6 +434,10 @@ if __name__ == "__main__":
     peak_coords = parameters['peak_coords']
     fifty_coords = parameters['fifty_coords']
 
+    if no_plot:
+        save_image2d_dir = ""
+        save_image3d_dir = ""
+
     save_plot2d = False if save_image2d_dir == "" else True
     save_plot3d = False if save_image3d_dir == "" else True
 
@@ -444,7 +450,7 @@ if __name__ == "__main__":
         os.makedirs(save_image3d_dir)
 
     # Define the empty feature tables
-    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'Max_x', 'Max_y', 's_x', 's_y',
+    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'A', 'Max_x', 'Max_y', 's_x', 's_y',
                                     'rmse', 'n_peaks', 'variation', 'qc_result'])
 
     # Read the input files as a dict
@@ -530,7 +536,8 @@ if __name__ == "__main__":
                 qc_result = 'ToCheck'
 
             #### Save features
-            feature.loc[len(feature)] = [var, exp, a, mx, my, sx, sy, rmse, n_peaks, variation, qc_result]
+            feature.loc[len(feature)] = [var, exp, np.max(z_hat), a, np.exp(mx), np.exp(my), np.exp(sx), np.exp(sy), 
+                                         rmse, n_peaks, variation, qc_result]
     # End of the loop
 
     # Save features table
