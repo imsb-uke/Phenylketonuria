@@ -1,14 +1,14 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.5.2 (stand alone version)
-    Authors: 
+    Version 1.5.3 (stand alone version)
+    Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
-    Scientific Contributor: 
+    Scientific Contributor:
         - Polina Gundorova (p.gundorova@uke.de)
     UKE, Hamburg, Germany - March 2024
 
-    To to plot the landscapes, the current version uses some codes from a Python script written by
+    To plot the landscapes, the current version uses some codes from a Python script written by
     Italo Balestra (italo.balestra@olt-dss.com) and Andrea Turcati (andrea.turcati@olt-dss.com)
     OmegaLambdaTec GmbH - 2023
 """
@@ -42,7 +42,7 @@ def read_experiments(exp):
     cols_2 = ["0.0","24.1","48.2","72.3","96.4","120.5","144.6","192.8","482.1","723.1","1205.2","2410.3"]
     cols_2 = [str(col) for col in cols_2]
     cols_final = [0, 25, 50, 75, 100, 125, 150, 200, 500, 750, 1250, 2500]
-    
+
     rows = [0, 10, 25, 50, 75, 100, 150, 250]
     rows = [int(row) for row in rows]
 
@@ -58,7 +58,7 @@ def read_experiments(exp):
             fps = [exp]
         else:
             raise ValueError("The file should be *.xlsm")
-    
+
     for fp in tqdm(fps):
         # fp = os.path.join(exp, wb)
         xl = pd.ExcelFile(fp)
@@ -77,7 +77,7 @@ def read_experiments(exp):
             df = df.dropna()
             exps = [df.iloc[0:8], df.iloc[9:17], df.iloc[18:26], df.iloc[27:35]]
             for i in range(len(exps)):
-                exps[i].index = rows  
+                exps[i].index = rows
                 exps[i].columns = cols_final
             dict_data[exp_name][sheet.split("-av")[0]] = exps
 
@@ -285,7 +285,7 @@ def plot_3d_map(
     azim=-120,
     rescale=True,
     max_val_scale=None,
-    legend=[True, True, True, True],
+    legend=[True, True, True, True],       # legend here is not being used. Used in plot_3dsurf()
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -411,14 +411,26 @@ if __name__ == "__main__":
     ## Read parameters json file and set parameters
     with open(param_dir, 'r') as file:
         parameters = json.load(file)
-
+    ### Save directory
     save_feature_dir = parameters['save_feature_dir']
     save_image2d_dir = parameters['save_image2d_dir']
     save_image3d_dir = parameters['save_image3d_dir']
     tag = parameters['tag']
+    ### QC thresholds
     qc_thr_rmse = parameters['qc_thr_rmse']
     qc_thr_n_peaks = parameters['qc_thr_n_peaks']
     qc_thr_variation = parameters['qc_thr_variation']
+    ### 3D plot parameters
+    sm_method = parameters['sm_method']
+    rescale = parameters['rescale']
+    max_val_scale = parameters['max_val_scale']
+    elev = parameters['elev']
+    azim = parameters['azim']
+    nbins = parameters['nbins']
+    info_box = parameters['info_box']
+    max_val = parameters['max_val']
+    peak_coords = parameters['peak_coords']
+    fifty_coords = parameters['fifty_coords']
 
     save_plot2d = False if save_image2d_dir == "" else True
     save_plot3d = False if save_image3d_dir == "" else True
@@ -432,7 +444,7 @@ if __name__ == "__main__":
         os.makedirs(save_image3d_dir)
 
     # Define the empty feature tables
-    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'Max_x', 'Max_y', 's_x', 's_y', 
+    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'Max_x', 'Max_y', 's_x', 's_y',
                                     'rmse', 'n_peaks', 'variation', 'qc_result'])
 
     # Read the input files as a dict
@@ -443,18 +455,18 @@ if __name__ == "__main__":
     print('Extract features ...')
     for exp in tqdm(dict_data.keys()):
         variants = dict_data[exp]
-    
+
         ## Obtain the WT maximum value for normalization
         WT_av = variants['WT'][3]
         max_wt = np.around(WT_av.max().max(), decimals=2) # maximum value of WT to be used for rescaling
-    
+
         ## Loop over variants in a single experiment
         for var in variants.keys():
             ### For each varianr, there exists 3 replicates and the last of (inx=3) contains the median one
-            ### We use the median experiment for the analysis, and use the 3 replicates to obtain the QC-variations 
+            ### We use the median experiment for the analysis, and use the 3 replicates to obtain the QC-variations
             e1, e2, e3, data = variants[var]
             name = exp + "_" + var
-            
+
             #### 1. QC: replicate variations
             e1, e2, e3 = reshape(e1/max_wt), reshape(e2/max_wt), reshape(e3/max_wt)
             exp_vals = np.concatenate([e1, e2, e3], axis=1)
@@ -462,44 +474,53 @@ if __name__ == "__main__":
             range = np.ptp(exp_vals, axis=1)
             variation = range / (median + 1)
             variation = variation.max()
-    
+
             #### 2. QC: Count the number of peacks
             z_np = data.to_numpy(dtype = "float")
             filtered_z = maximum_filter(z_np, size=3)
             n_peaks = (z_np == filtered_z).sum().sum()
-    
+
             #### 3. Gaussian modelling
             ##### Get x, y, z
             x, y, z = transform_df(data, max_wt, rescale=True)
+            ##### 2D and 3D Plot of the row landscapes
             if save_plot2d:
-                plot_landscape(x, y, z, name = name, 
-                               show = False, save = True, save_dir = save_image2d_dir)
+                plot_landscape(x, y, z, name = name,
+                               show = False, save = True, save_dir = save_image2d_dir,
+                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                               legend=[info_box, max_val, peak_coords, fifty_coords])
             if save_plot3d:
                 plot_3d_map(x, y, z, name = name,
-                            show=False, save=True, save_dir = save_image3d_dir)
-                
+                            show=False, save=True, save_dir = save_image3d_dir,
+                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                            elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
+
             x, y, z = np.log(x + eps), np.log(y + eps), z
-    
+
             ##### Curve fitting
             initial_guess = (1.0, 5, 5, 2, 2)
             bounds = ([0, eps, eps, 0.5, 0.5],                       # Lower bounds
                       [120, np.log(1500), np.log(150), 1000, 1000])  # Upper bounds
             popt, pcov = curve_fit(gaussian_2d, (x, y), z, p0=initial_guess, bounds=bounds)
-            
+
             a, mx, my, sx, sy = tuple(popt)
             z_hat = gaussian_2d((x, y), a, mx, my, sx, sy)
-            
+
             #### 4. Calculate RMSE
             mse = np.mean((z/z.max() - z_hat/z_hat.max())**2)
             rmse = np.sqrt(mse)
+            ##### 2D and 3D Plot of the modeled landscapes
             if save_plot2d:
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
-                              show = False, save = True, save_dir = save_image2d_dir)
+                               show = False, save = True, save_dir = save_image2d_dir,
+                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                               legend=[info_box, max_val, peak_coords, fifty_coords])
             if save_plot3d:
                 plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
-                            show=False, save=True, save_dir = save_image3d_dir)
-    
-    
+                            show=False, save=True, save_dir = save_image3d_dir,
+                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                            elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
+
             #### 5. QC check
             if (rmse <= qc_thr_rmse[0]) and (n_peaks <= qc_thr_n_peaks[0]) and (variation <= qc_thr_variation[0]):
                 qc_result = 'Pass'
@@ -507,7 +528,7 @@ if __name__ == "__main__":
                 qc_result = 'Fail'
             else:
                 qc_result = 'ToCheck'
-            
+
             #### Save features
             feature.loc[len(feature)] = [var, exp, a, mx, my, sx, sy, rmse, n_peaks, variation, qc_result]
     # End of the loop
@@ -517,12 +538,12 @@ if __name__ == "__main__":
         n = ""
     else:
         n = "_" + name
-    
+
     if tag == "":
         t = ""
     else:
         t = "_" + tag
-    
+
     Path_to_save = os.path.join(save_feature_dir, "extracted_features" + n + t + ".csv")
     feature.to_csv(Path_to_save, index=False)
     print("Results are saved as:")
