@@ -45,13 +45,13 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 * ```qc_thr_variation```: QC threshold for Variations; ```default=[0.1, 0.25]```
 * ```elev```: Elevation of the camera in the 3D plots; ```default=30```,
 * ```azim```: Angle of the camera in the 3D plots (in degrees);```default=-120```,
-*```nbins```: Number of bins used for the interpolation (mesh grid of size nbins x nbins);```default=1000```,
-*```sm_method```: Method used for the interpolation and smoothing ("regular_grid" or "linear_ndi");```default='regular_grid'```,
-*```rescale```: Binary value to rescale the data with respect to the *WT*;```default=True```,
-*```max_val_scale```: Maximum value of the non-rescaled data;```default=10000```,
-*```info_box```: Binary value to add an information box to the plots;```default=True```,
-*```max_val```: Binary value to add the maximum value of the data to the information box;```default=True```,
-*```peak_coords```: Binary value to add the coordinates of the peaks to the information box;```default=True```,
-*```fifty_coords```: Binary value to add the coordinates of the 50% of the maximum value to the information ;```default=True```,
-*```plot_replicates```: Binary value to plot and save data for all the replicates;```default=True```
+* ```nbins```: Number of bins used for the interpolation (mesh grid of size nbins x nbins);```default=1000```,
+* ```sm_method```: Method used for the interpolation and smoothing ("regular_grid" or "linear_ndi");```default='regular_grid'```,
+* ```rescale```: Binary value to rescale the data with respect to the *WT*;```default=True```,
+* ```max_val_scale```: Maximum value of the non-rescaled data;```default=10000```,
+* ```info_box```: Binary value to add an information box to the plots;```default=True```,
+* ```max_val```: Binary value to add the maximum value of the data to the information box;```default=True```,
+* ```peak_coords```: Binary value to add the coordinates of the peaks to the information box;```default=True```,
+* ```fifty_coords```: Binary value to add the coordinates of the 50% of the maximum value to the information ;```default=True```,
+* ```plot_replicates```: Binary value to plot and save data for all the replicates;```default=True```
 
