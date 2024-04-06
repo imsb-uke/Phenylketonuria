@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.7.0
+    Version 1.8.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -471,6 +471,7 @@ if __name__ == "__main__":
     max_val = parameters['max_val']
     peak_coords = parameters['peak_coords']
     fifty_coords = parameters['fifty_coords']
+    plot_replicates = parameters['plot_replicates']
 
     if no_plot:
         save_image2d_dir = ""
@@ -509,11 +510,11 @@ if __name__ == "__main__":
         for var in variants.keys():
             ### For each varianr, there exists 3 replicates and the last of (inx=3) contains the median one
             ### We use the median experiment for the analysis, and use the 3 replicates to obtain the QC-variations
-            e1, e2, e3, data = variants[var]
+            rep1, rep2, rep3, data = variants[var]
             name = exp + "_" + var
 
             #### 1. QC: replicate variations
-            e1, e2, e3 = reshape(e1/max_wt), reshape(e2/max_wt), reshape(e3/max_wt)
+            e1, e2, e3 = reshape(rep1/max_wt), reshape(rep2/max_wt), reshape(rep3/max_wt)
             exp_vals = np.concatenate([e1, e2, e3], axis=1)
             median = np.median(exp_vals, axis=1)
             range = np.ptp(exp_vals, axis=1)
@@ -527,7 +528,8 @@ if __name__ == "__main__":
 
             #### 3. Gaussian modelling
             ##### Get x, y, z
-            x, y, z = transform_df(data, max_wt, rescale=True)
+            x, y, z = transform_df(data, max_wt, rescale=rescale)
+            
             ##### 2D and 3D Plot of the row landscapes
             if save_plot2d:
                 plot_landscape(x, y, z, name = name,
@@ -540,9 +542,23 @@ if __name__ == "__main__":
                             method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
-            x, y, z = np.log(x + eps), np.log(y + eps), z
+            ##### 2D and 3D Plot of the each replicte
+            if plot_replicates:
+                for i, rep in enumerate((rep1, rep2, rep3)):
+                    x_rep, y_rep, z_rep = transform_df(rep, max_wt, rescale=rescale)
+                    if save_plot2d:
+                        plot_landscape(x_rep, y_rep, z_rep, name = f'{name}_rep_{i}',
+                                       show = False, save = True, save_dir = save_image2d_dir,
+                                       method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                                       legend=[info_box, max_val, peak_coords, fifty_coords])
+                    if save_plot3d:
+                        plot_3d_map(x_rep, y_rep, z_rep, name = f'{name}_rep_{i}',
+                                    show=False, save=True, save_dir = save_image3d_dir,
+                                    method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                                    elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
             ##### Curve fitting
+            x, y, z = np.log(x + eps), np.log(y + eps), z
             initial_guess = (1.0, 5, 5, 2, 2)
             bounds = ([0, eps, eps, 0.5, 0.5],                       # Lower bounds
                       [120, np.log(1500), np.log(150), 1000, 1000])  # Upper bounds
