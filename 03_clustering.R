@@ -54,11 +54,17 @@ scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples",
 # Save
 data_with_cluster = merge(data, X[,c("genotype_exp", "clusters")], by = "genotype_exp", all.x = TRUE)
 data_with_cluster$clusters[is.na(data_with_cluster$clusters)] = 0
+write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v1.csv")
 
+col.pal = grDevices::rainbow(Kopt+1)
+scatter3D(data_with_cluster$Max_x, data_with_cluster$Max_y, data_with_cluster$Max, 
+          pch = 19, cex = 1, theta = 10, phi = 10, box = TRUE, 
+          colvar = data_with_cluster$clusters, col = col.pal)
 
+scatter3D(data_with_cluster$Max_x, data_with_cluster$Max_y, data_with_cluster$Max, 
+          pch = 19, cex = 1, theta = 0, phi = 90, box = TRUE, 
+          colvar = data_with_cluster$clusters, col = col.pal)
 
-
-write.csv(XX, "Data/Clustering_Result_v6.csv")
 
 ###############
 {
