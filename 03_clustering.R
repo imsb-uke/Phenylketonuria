@@ -6,7 +6,7 @@ setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(ConsensusClustering)
 library(plot3D)
 
-data = read.csv("Data/data_processed.csv")
+data = read.csv("Data/data_processed_2.csv")
 
 # Remove WT and non-responders
 data = data[data$genotype != "WT",]
@@ -15,8 +15,9 @@ dim(data)
 
 # Feature extraction
 X = data.frame(
-  x = exp(data$Max_x),
-  y = exp(data$Max_y),
+  genotype_exp = data$genotype_exp,
+  x = data$Max_x,
+  y = data$Max_y,
   z = log(data$Max),
   sx = log(data$s_x),
   sy = log(data$s_y),
@@ -25,12 +26,10 @@ X = data.frame(
 
 # Clustering
 X = X[(X$x < 1400) & (X$y < 140),]
-X = data.frame(scale(X))
+X_scaled = data.frame(scale(X[,-1]))
+X_scaled = X_scaled[,c("x", "y", "z")]
 
-X = X[,1:3]
-# X = X[,-6]
-
-Adj = adj_mat(X, method = "euclidian")
+Adj = adj_mat(X_scaled, method = "euclidian")
 CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.7, max.itter = 100, clustering.method = "pam")
 
 Scores = CC_cluster_count(CM)
@@ -42,6 +41,7 @@ message(paste0("The optimum number of clusters = ", Kopt));  # Kopt = 6
 pheatmap::pheatmap(CM[[Kopt]])
 
 clusters = clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
+X$clusters = clusters
 
 col.pal = grDevices::rainbow(Kopt)
 scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
@@ -52,10 +52,13 @@ scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples",
 
 
 # Save
-XX = cbind(data[(exp(data$Max_x) < 1400) & (exp(data$Max_y) < 140),c("genotype", "experiment")], 
-           X, 
-           clusters)
-# write.csv(XX, "Data/Clustering_Result_v5.csv")
+data_with_cluster = merge(data, X[,c("genotype_exp", "clusters")], by = "genotype_exp", all.x = TRUE)
+data_with_cluster$clusters[is.na(data_with_cluster$clusters)] = 0
+
+
+
+
+write.csv(XX, "Data/Clustering_Result_v6.csv")
 
 ###############
 {

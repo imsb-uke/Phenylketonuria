@@ -10,7 +10,7 @@ data = read.csv("gm_output/features/extracted_features.csv")
 
 # Read final qc description excel file
 qc_table = read_excel("gm_output/features/20240321_features_and_qc_PG.XLSX")
-qc_table = data.frame(qc_table[, c("genotype", "experiment", "final_decision")])
+qc_table = data.frame(qc_table[, c("genotype", "experiment", "final decision")])
 
 # Read the table with response to treatment
 #...
@@ -21,7 +21,7 @@ qc_table$genotype_exp = paste0(qc_table$genotype, "|", qc_table$experiment)
 data = merge(data, qc_table, by = "genotype_exp", suffixes=c("", ".y"))
 
 # Selected QC passed samples
-idx = !is.na(data$final_decision)
+idx = !is.na(data$final.decision)
 print(paste0("Number of samples passed QC: ", sum(idx)))
 data = data[idx, ]
 
@@ -55,8 +55,8 @@ data$response = rep(1, nrow(data))
 data$response[data$genotype %in% non_responders] = 0
 
 # Remove extra cols
-data = data[, -c(13, 14)]
+data = data[, -c(18, 19)]
 
 # Save as csv
-write.csv(data, "Data/data_processed.csv")
+write.csv(data, "Data/data_processed_2.csv")
 
