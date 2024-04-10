@@ -473,6 +473,8 @@ if __name__ == "__main__":
     fifty_coords = parameters['fifty_coords']
     plot_replicates = parameters['plot_replicates']
 
+    max_val_scale_model = max_val_scale
+
     if no_plot:
         save_image2d_dir = ""
         save_image3d_dir = ""
@@ -504,10 +506,15 @@ if __name__ == "__main__":
 
         ## Obtain the WT maximum value for normalization
         WT_av = variants['WT'][3]
-        max_wt = np.around(WT_av.max().max(), decimals=2) # maximum value of WT to be used for rescaling
+        max_wt = WT_av.max().max()         # maximum value of WT to be used for rescaling
 
+        ## Rearange "variants.keys()" to make sure that 'WT' is the first. We need that to get the max_wt_model
+        variants_keys = list(variants.keys())
+        variants_keys.remove('WT')
+        variants_keys = ['WT'] + variants_keys
+        
         ## Loop over variants in a single experiment
-        for var in variants.keys():
+        for var in variants_keys:
             ### For each varianr, there exists 3 replicates and the last of (inx=3) contains the median one
             ### We use the median experiment for the analysis, and use the 3 replicates to obtain the QC-variations
             rep1, rep2, rep3, data = variants[var]
@@ -567,8 +574,13 @@ if __name__ == "__main__":
             a, mx, my, sx, sy = tuple(popt)
             z_hat = gaussian_2d((x, y), a, mx, my, sx, sy)
 
+            if var == 'WT':
+                max_wt_model = np.max(z_hat)
+                if rescale:
+                    max_val_scale_model = max_wt_model
+
             ##### Calculate 50% max values
-            max = np.max(z_hat)
+            max = np.max(z_hat) / max_wt_model
             x_max, x_min, y_max, y_min = half_max(max, a, mx, my, sx, sy)
             
             ##### Add all the values into a dictionary
@@ -592,12 +604,12 @@ if __name__ == "__main__":
             if save_plot2d:
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                                show = False, save = True, save_dir = save_image2d_dir,
-                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale_model,
                                legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values)
             if save_plot3d:
                 plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                             show=False, save=True, save_dir = save_image3d_dir,
-                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale_model,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
             #### 5. QC check

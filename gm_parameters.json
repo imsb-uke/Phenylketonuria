@@ -15,5 +15,5 @@
     "max_val": true,
     "peak_coords": true, 
     "fifty_coords": true, 
-    "plot_replicates": true
+    "plot_replicates": false
 }
