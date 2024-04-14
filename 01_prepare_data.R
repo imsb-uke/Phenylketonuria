@@ -1,15 +1,15 @@
 # Step 1. Read and process the tables
 
 rm(list = ls())
-setwd("~/Desktop/My_Codes/Phenylketonuria/")
+setwd("~/Desktop/My_Codes/Phenylketonuria")
 
 library(readxl)
 
 # Read the gm.py output
-data = read.csv("gm_output/features/extracted_features_EX")
+data = read.csv("gm_output/features/extracted_features.csv")
 
 # Read final qc description excel file
-qc_table = read_excel("gm_output/features/20240321_features_and_qc_PG.XLSX")
+qc_table = read_excel("Data/20240321_features_and_qc_PG.XLSX")
 qc_table = data.frame(qc_table[, c("genotype", "experiment", "final decision")])
 
 # Read the table with response to treatment
@@ -60,5 +60,5 @@ data$response[data$genotype %in% non_responders] = 0
 data = data[, -c(18, 19)]
 
 # Save as csv
-write.csv(data, "Data/data_processed_2.csv")
+write.csv(data, "Data/data_processed_4.csv")
 

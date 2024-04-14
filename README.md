@@ -54,5 +54,5 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 * ```peak_coords```: Binary value to add the coordinates of the peaks to the information box;```default=True```,
 * ```fifty_coords```: Binary value to add the coordinates of the 50% of the maximum value to the information ;```default=True```,
 * ```plot_replicates```: Binary value to plot and save data for all the replicates;```default=False```
-* ```plot_extra": false```: Binary value to plot and save the data in the log scale';```default=False```
+* ```plot_extra"```: Binary value to plot and save the data in the log scale';```default=False```
 
