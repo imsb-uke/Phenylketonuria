@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 2.0.0
+    Version 2.0.5
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -113,7 +113,8 @@ def plot_landscape(
     rescale=True,
     max_val_scale=None,
     legend=[True, True, True, True],
-    legend_vals=None
+    legend_vals=None,
+    is_log = False,
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -180,8 +181,12 @@ def plot_landscape(
         )
     ax.set_xlim([np.min(x_dense), np.max(x_dense)])
     ax.set_ylim([np.min(y_dense), np.max(y_dense)])
-    ax.set_xlabel("Phe [uM]")
-    ax.set_ylabel("BH4 [uM]")
+    if is_log:
+        ax.set_xlabel("Phe log[uM]")
+        ax.set_ylabel("BH4 log[uM]")
+    else:
+        ax.set_xlabel("Phe [uM]")
+        ax.set_ylabel("BH4 [uM]")
     # ax.set_title(f"{name}")
 
     CS = ax.contour(
@@ -296,6 +301,7 @@ def plot_3d_map(
     rescale=True,
     max_val_scale=None,
     legend=[True, True, True, True],       # legend here is not being used. Used in plot_3dsurf()
+    is_log = False,
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -377,8 +383,12 @@ def plot_3d_map(
         cbar.set_label("Enzyme Activity")
 
     # ax.set_title(name)
-    ax.set_xlabel("Phe [uM]")
-    ax.set_ylabel("BH4 [uM]")
+    if is_log:
+        ax.set_xlabel("Phe log[uM]")
+        ax.set_ylabel("BH4 log[uM]")
+    else:
+        ax.set_xlabel("Phe [uM]")
+        ax.set_ylabel("BH4 [uM]")
 
     if z_smoothed.max() < 5:
         ax.set_zlim([0, 5])
@@ -472,6 +482,7 @@ if __name__ == "__main__":
     peak_coords = parameters['peak_coords']
     fifty_coords = parameters['fifty_coords']
     plot_replicates = parameters['plot_replicates']
+    plot_extra = parameters['plot_extra']
 
     if no_plot:
         save_image2d_dir = ""
@@ -547,6 +558,19 @@ if __name__ == "__main__":
                             method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
+            if plot_extra:
+                if save_plot2d:
+                    plot_landscape(np.log(x + eps), np.log(y + eps), z, name = name + "_extra",
+                                   show = False, save = True, save_dir = save_image2d_dir,
+                                   method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                                   legend=[info_box, max_val, peak_coords, fifty_coords], is_log = True)
+                if save_plot3d:
+                    plot_3d_map(np.log(x + eps), np.log(y + eps), z, name = name + "_extra",
+                                show=False, save=True, save_dir = save_image3d_dir,
+                                method=sm_method, rescale=rescale, max_val_scale=max_val_scale, is_log = True,
+                                elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
+                
+
             ##### 2D and 3D Plot of the each replicte
             if plot_replicates:
                 for i, rep in enumerate((rep1, rep2, rep3)):
@@ -611,6 +635,18 @@ if __name__ == "__main__":
                             show=False, save=True, save_dir = save_image3d_dir,
                             method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
+
+            if plot_extra:
+                if save_plot2d:
+                    plot_landscape(x, y, z_hat, name = name + "_model_extra",
+                                   show = False, save = True, save_dir = save_image2d_dir,
+                                   method=sm_method, rescale=rescale, max_val_scale=max_val_scale, is_log = True,
+                                   legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values)
+                if save_plot3d:
+                    plot_3d_map(x, y, z_hat, name = name + "_model_extra",
+                                show=False, save=True, save_dir = save_image3d_dir,
+                                method=sm_method, rescale=rescale, max_val_scale=max_val_scale, is_log = True,
+                                elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
             #### 5. QC check
             if (rmse <= qc_thr_rmse[0]) and (n_peaks <= qc_thr_n_peaks[0]) and (variation <= qc_thr_variation[0]):
