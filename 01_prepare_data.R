@@ -6,7 +6,7 @@ setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(readxl)
 
 # Read the gm.py output
-data = read.csv("gm_output/features/extracted_features.csv")
+data = read.csv("gm_output/features/extracted_features_EX")
 
 # Read final qc description excel file
 qc_table = read_excel("gm_output/features/20240321_features_and_qc_PG.XLSX")
@@ -50,6 +50,8 @@ non_responders = c(
   "P281L-IVS10", #-11G>A
   "IVS10-IS10"
 )
+
+
 
 data$response = rep(1, nrow(data))
 data$response[data$genotype %in% non_responders] = 0

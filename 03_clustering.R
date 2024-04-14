@@ -11,6 +11,7 @@ data = read.csv("Data/data_processed_2.csv")
 # Remove WT and non-responders
 data = data[data$genotype != "WT",]
 data = data[data$response != 0,]
+data = data[data$genotype_exp != "L348V-R408W|REP5", ]
 dim(data)
 
 # Feature extraction
@@ -25,12 +26,12 @@ X = data.frame(
 )
 
 # Clustering
-X = X[(X$x < 1400) & (X$y < 140),]
+X = X[(X$x < 1400) & (X$y < 160),]
 X_scaled = data.frame(scale(X[,-1]))
 X_scaled = X_scaled[,c("x", "y", "z")]
 
 Adj = adj_mat(X_scaled, method = "euclidian")
-CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.7, max.itter = 100, clustering.method = "pam")
+CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.8, max.itter = 100, clustering.method = "pam")
 
 Scores = CC_cluster_count(CM)
 RobScore = Scores[["LogitScore"]]
@@ -40,7 +41,7 @@ Kopt = Scores[["Kopt_LogitScore"]]
 message(paste0("The optimum number of clusters = ", Kopt));  # Kopt = 6
 pheatmap::pheatmap(CM[[Kopt]])
 
-clusters = clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
+clusters = clusters = pam_clust_from_adj_mat(Adj, k = Kopt, alpha = 1, adj.conv = FALSE)
 X$clusters = clusters
 
 col.pal = grDevices::rainbow(Kopt)
@@ -54,7 +55,7 @@ scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples",
 # Save
 data_with_cluster = merge(data, X[,c("genotype_exp", "clusters")], by = "genotype_exp", all.x = TRUE)
 data_with_cluster$clusters[is.na(data_with_cluster$clusters)] = 0
-write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v1.csv")
+write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v2.csv")
 
 col.pal = grDevices::rainbow(Kopt+1)
 scatter3D(data_with_cluster$Max_x, data_with_cluster$Max_y, data_with_cluster$Max, 

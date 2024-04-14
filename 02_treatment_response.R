@@ -14,4 +14,4 @@ scatter3D(data$Max_x, data$Max_y, log(data$Max) , pch = 19, cex = 1, main="Respo
 plot(data$Max_x, data$Max_y, pch = 19, cex = 1, 
      col = ifelse(data$response == 0, "red", "green"),
      main="Response to treatment", xlab = "Max x", ylab = "Max y")
-abline(v = 1400, h = 140)
+abline(v = 1400, h = 160)

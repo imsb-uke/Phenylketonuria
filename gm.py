@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 1.9.0
+    Version 2.0.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -208,7 +208,7 @@ def plot_landscape(
         bh4_min = df_tmp2[df_tmp2 >= mx * 0.5].index.min()
         bh4_max = df_tmp2[df_tmp2 >= mx * 0.5].index.max()
     else:
-        mx = legend_vals['Max']
+        mx = legend_vals['Max_theory']
         bh4 = legend_vals['Max_y']
         phe = legend_vals['Max_x']
         bh4_min = legend_vals['Half_y_min']
@@ -473,8 +473,6 @@ if __name__ == "__main__":
     fifty_coords = parameters['fifty_coords']
     plot_replicates = parameters['plot_replicates']
 
-    max_val_scale_model = max_val_scale
-
     if no_plot:
         save_image2d_dir = ""
         save_image3d_dir = ""
@@ -491,7 +489,7 @@ if __name__ == "__main__":
         os.makedirs(save_image3d_dir)
 
     # Define the empty feature tables
-    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max', 'A', 'Max_x', 'Max_y', 
+    feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max_practice', 'Max_theory', 'Max_x', 'Max_y', 
                                     's_x', 's_y', 'Half_x_min', 'Half_x_max', 'Half_y_min', 'Half_y_max',
                                     'rmse', 'n_peaks', 'variation', 'qc_result'])
 
@@ -575,41 +573,43 @@ if __name__ == "__main__":
             z_hat = gaussian_2d((x, y), a, mx, my, sx, sy)
 
             if var == 'WT':
-                max_wt_model = np.max(z_hat)
-                if rescale:
-                    max_val_scale_model = max_wt_model
+                # a is the theoritical max and max(z_hat) is the observed max
+                max_wt_model = a
 
             ##### Calculate 50% max values
-            max = np.max(z_hat) / max_wt_model
-            x_max, x_min, y_max, y_min = half_max(max, a, mx, my, sx, sy)
+            max_practice = np.max(z_hat) / max_wt_model
+            max_theory = a / max_wt_model
+            x_max, x_min, y_max, y_min = half_max(max_practice, max_theory, mx, my, sx, sy)
             
             ##### Add all the values into a dictionary
             values = {
-                'Max'        : np.round(max, 2),
-                'A'          : np.round(np.max(a), 2),
-                'Max_x'      : np.round(np.exp(mx) ,2),
-                'Max_y'      : np.round(np.exp(my) ,2),
-                's_x'        : np.round(np.exp(sx) ,2),
-                's_y'        : np.round(np.exp(sy) ,2),
-                'Half_x_min' : np.round(np.exp(x_min) ,2),
-                'Half_x_max' : np.round(np.exp(x_max) ,2),
-                'Half_y_min' : np.round(np.exp(y_min) ,2),
-                'Half_y_max' : np.round(np.exp(y_max) ,2),
+                'Max_practice' : np.round(max_practice, 2),
+                'Max_theory'   : np.round(np.max(max_theory), 2),
+                'Max_x'        : np.round(np.exp(mx) ,2),
+                'Max_y'        : np.round(np.exp(my) ,2),
+                's_x'          : np.round(np.exp(sx) ,2),
+                's_y'          : np.round(np.exp(sy) ,2),
+                'Half_x_min'   : np.round(np.exp(x_min) ,2),
+                'Half_x_max'   : np.round(np.exp(x_max) ,2),
+                'Half_y_min'   : np.round(np.exp(y_min) ,2),
+                'Half_y_max'   : np.round(np.exp(y_max) ,2),
             }
 
             #### 4. Calculate RMSE
             mse = np.mean((z/z.max() - z_hat/z_hat.max())**2)
             rmse = np.sqrt(mse)
             ##### 2D and 3D Plot of the modeled landscapes
+            z_hat = z_hat / max_wt_model * 100   # scale modeled data
+
             if save_plot2d:
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                                show = False, save = True, save_dir = save_image2d_dir,
-                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale_model,
+                               method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
                                legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values)
             if save_plot3d:
                 plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                             show=False, save=True, save_dir = save_image3d_dir,
-                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale_model,
+                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
             #### 5. QC check
