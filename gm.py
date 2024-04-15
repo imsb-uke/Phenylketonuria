@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 2.0.5
+    Version 2.1.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -148,7 +148,6 @@ def plot_landscape(
             Z_rgi = rgi(np.array([B1.flatten(), B2.flatten()]).T).reshape(B1.shape)
             z_smoothed = ndimage.gaussian_filter(Z_rgi, sigma=7)
             z_smoothed[z_smoothed < 0] = 0
-            # z_smoothed[z_smoothed > 100] = 100
 
         elif method not in ["linear_ndi", "regular_grid"]:
             raise NotImplementedError(
@@ -201,8 +200,8 @@ def plot_landscape(
 
     df = pd.DataFrame(z_smoothed, columns=x_dense, index=y_dense)
 
-    if legend_vals==None:
-        mx = np.around(df.max().max(), decimals=2)
+    if legend_vals == None:
+        mx = df.max().max()
         bh4 = df.stack().idxmax()[0]
         phe = df.stack().idxmax()[1]
     
@@ -213,14 +212,14 @@ def plot_landscape(
         bh4_min = df_tmp2[df_tmp2 >= mx * 0.5].index.min()
         bh4_max = df_tmp2[df_tmp2 >= mx * 0.5].index.max()
     else:
-        mx = legend_vals['Max_theory']
+        mx = legend_vals['Max_theory'] * 100
         bh4 = legend_vals['Max_y']
         phe = legend_vals['Max_x']
         bh4_min = legend_vals['Half_y_min']
         bh4_max = legend_vals['Half_y_max']
         phe_min = legend_vals['Half_x_min']
         phe_max = legend_vals['Half_x_max']
-
+    
     output_vals = {
         "Max": mx,
         "Phe": phe,
@@ -625,6 +624,7 @@ if __name__ == "__main__":
             ##### 2D and 3D Plot of the modeled landscapes
             z_hat = z_hat / max_wt_model * 100   # scale modeled data
 
+            
             if save_plot2d:
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                                show = False, save = True, save_dir = save_image2d_dir,

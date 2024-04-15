@@ -6,7 +6,7 @@ setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(ConsensusClustering)
 library(plot3D)
 
-data = read.csv("Data/data_processed_4.csv")
+data = read.csv("Data/data_processed_3.csv")
 
 # Remove WT and non-responders
 data = data[data$genotype != "WT",]
@@ -35,17 +35,17 @@ X_scaled = data.frame(scale(X[,-1]))
 X_scaled = X_scaled[,c("x", "y", "z")]
 
 Adj = adj_mat(X_scaled, method = "euclidian")
-CM = consensus_matrix(Adj, max.cluster = 6, resample.ratio = 0.8, max.itter = 100, clustering.method = "pam")
+CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.8, max.itter = 100, clustering.method = "pam")
 
 Scores = CC_cluster_count(CM)
 RobScore = Scores[["LogitScore"]]
 plot(RobScore, type = "b", pch = 19)
 
 Kopt = Scores[["Kopt_LogitScore"]]
-message(paste0("The optimum number of clusters = ", Kopt));  # Kopt = 6
+message(paste0("The optimum number of clusters = ", Kopt))
 pheatmap::pheatmap(CM[[Kopt]])
 
-clusters = clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
+clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = FALSE)
 X$clusters = clusters
 
 col.pal = grDevices::rainbow(Kopt)
