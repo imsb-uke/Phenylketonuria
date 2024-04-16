@@ -4,6 +4,7 @@ rm(list = ls())
 setwd("~/Desktop/My_Codes/Phenylketonuria")
 
 library(readxl)
+library(MASS)
 
 # Read the gm.py output
 data = read.csv("gm_output/features/extracted_features.csv")
@@ -19,6 +20,23 @@ qc_table = data.frame(qc_table[, c("genotype", "experiment", "final decision")])
 data$genotype_exp = paste0(data$genotype, "|", data$experiment)
 qc_table$genotype_exp = paste0(qc_table$genotype, "|", qc_table$experiment)
 data = merge(data, qc_table, by = "genotype_exp", suffixes=c("", ".y"))
+
+# RMSE≥0.25, n_peaks≥8, var≥0.25
+hist(data$rmse, 20)
+hist(data$n_peaks)
+hist(data$variation, 20)
+
+boxplot(data$rmse)
+boxplot(data$n_peaks)
+boxplot(data$variation)
+
+2 / fitdistr(data$rmse, "exponential")$estimate
+2 / fitdistr(data$n_peaks, "exponential")$estimate
+2 / fitdistr(data$variation, "exponential")$estimate
+
+
+plot(data$variation, data$n_peaks)
+abline(v=0.23)
 
 # Selected QC passed samples
 idx = !is.na(data$final.decision)
@@ -60,5 +78,5 @@ data$response[data$genotype %in% non_responders] = 0
 data = data[, -c(18, 19)]
 
 # Save as csv
-write.csv(data, "Data/data_processed_4.csv")
+write.csv(data, "Data/data_processed_5.csv")
 
