@@ -78,5 +78,5 @@ data$response[data$genotype %in% non_responders] = 0
 data = data[, -c(18, 19)]
 
 # Save as csv
-write.csv(data, "Data/data_processed_5.csv")
+write.csv(data, "Data/data_processed_6.csv")
 

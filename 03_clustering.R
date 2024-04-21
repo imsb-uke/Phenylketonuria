@@ -6,7 +6,7 @@ setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(ConsensusClustering)
 library(plot3D)
 
-data = read.csv("Data/data_processed_5.csv")
+data = read.csv("Data/data_processed_6.csv")
 
 # Remove WT and non-responders
 data = data[data$genotype != "WT",]
@@ -27,13 +27,13 @@ X = data.frame(
 
 # Clustering
 # filter = (X$x < 1000) & (X$y < 160)
-filter = (X$x < 1400) & (X$y < 160)
+filter = (X$x < 1400) & (X$y < 210)
 plot(X[,2], X[,3], pch = 19, col = ifelse(filter, "green", "red"))
 X = X[filter,]
 
+X$z = exp(X$z)
 X_scaled = data.frame(scale(X[,-1]))
 X_scaled = X_scaled[,c("x", "y", "z")]
-
 Adj = adj_mat(X_scaled, method = "euclidian")
 CM = consensus_matrix(Adj, max.cluster = 8, resample.ratio = 0.7, max.itter = 100, clustering.method = "pam")
 
@@ -48,9 +48,9 @@ pheatmap::pheatmap(CM[[Kopt]])
 clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = TRUE)
 X$clusters = clusters
 
-col.pal = grDevices::rainbow(Kopt)
+col.pal = grDevices::rainbow(Kopt + 1)
 scatter3D(X$x, X$y, exp(X$z) , pch = 19, cex = 1, main = "Clusters of all samples", 
-          theta = 10, phi = 10, box = TRUE, colvar = clusters, col = col.pal)
+          theta = 10, phi = 0, box = TRUE, colvar = clusters, col = col.pal)
 
 scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
           theta = 0, phi = 90, box = TRUE, colvar = clusters, col = col.pal)
