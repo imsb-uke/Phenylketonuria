@@ -26,17 +26,9 @@ hist(data$rmse, 20)
 hist(data$n_peaks)
 hist(data$variation, 20)
 
-boxplot(data$rmse)
-boxplot(data$n_peaks)
-boxplot(data$variation)
-
 2 / fitdistr(data$rmse, "exponential")$estimate
 2 / fitdistr(data$n_peaks, "exponential")$estimate
 2 / fitdistr(data$variation, "exponential")$estimate
-
-
-plot(data$variation, data$n_peaks)
-abline(v=0.23)
 
 # Selected QC passed samples
 idx = !is.na(data$final.decision)
@@ -71,8 +63,8 @@ non_responders = c(
 
 
 
-data$response = rep(1, nrow(data))
-data$response[data$genotype %in% non_responders] = 0
+data$response_available = rep(1, nrow(data))
+data$response_available[data$genotype %in% non_responders] = 0
 
 # Remove extra cols
 data = data[, -c(18, 19)]

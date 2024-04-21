@@ -1,4 +1,4 @@
-# Step3. Clustering the landscapes using Consensus Clustering
+# Step2. Clustering the landscapes using Consensus Clustering
 
 rm(list = ls())
 setwd("~/Desktop/My_Codes/Phenylketonuria/")
@@ -6,11 +6,11 @@ setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(ConsensusClustering)
 library(plot3D)
 
-data = read.csv("Data/data_processed_6.csv")
+data_all = read.csv("Data/data_processed_6.csv")
 
 # Remove WT and non-responders
-data = data[data$genotype != "WT",]
-data = data[data$response != 0,]
+data_all = data_all[data_all$genotype != "WT",]
+data = data_all[data_all$response != 0,]
 # data = data[data$genotype_exp != "L348V-R408W|REP5", ]
 dim(data)
 
@@ -26,12 +26,11 @@ X = data.frame(
 )
 
 # Clustering
-# filter = (X$x < 1000) & (X$y < 160)
-filter = (X$x < 1400) & (X$y < 210)
+filter = (X$x < 1400) & (X$y < 200)
 plot(X[,2], X[,3], pch = 19, col = ifelse(filter, "green", "red"))
 X = X[filter,]
 
-X$z = exp(X$z)
+# X$z = exp(X$z)
 X_scaled = data.frame(scale(X[,-1]))
 X_scaled = X_scaled[,c("x", "y", "z")]
 Adj = adj_mat(X_scaled, method = "euclidian")
@@ -49,14 +48,14 @@ clusters = pam_clust_from_adj_mat(CM[[Kopt]], k = Kopt, alpha = 1, adj.conv = TR
 X$clusters = clusters
 
 col.pal = grDevices::rainbow(Kopt + 1)
-scatter3D(X$x, X$y, exp(X$z) , pch = 19, cex = 1, main = "Clusters of all samples", 
+scatter3D(X$x, X$y, (X$z) , pch = 19, cex = 1, main = "Clusters of all samples", 
           theta = 10, phi = 0, box = TRUE, colvar = clusters, col = col.pal)
 
 scatter3D(X$x, X$y, X$z , pch = 19, cex = 1, main = "Clusters of all samples", 
           theta = 0, phi = 90, box = TRUE, colvar = clusters, col = col.pal)
 
 # Save
-data_with_cluster = merge(data, X[,c("genotype_exp", "clusters")], by = "genotype_exp", all.x = TRUE)
+data_with_cluster = merge(data_all, X[,c("genotype_exp", "clusters")], by = "genotype_exp", all.x = TRUE)
 data_with_cluster$clusters[is.na(data_with_cluster$clusters)] = 0
 
 col.pal = grDevices::rainbow(Kopt+1)
@@ -68,56 +67,4 @@ scatter3D(data_with_cluster$Max_x, data_with_cluster$Max_y, data_with_cluster$Ma
           pch = 19, cex = 1, theta = 0, phi = 90, box = TRUE, 
           colvar = data_with_cluster$clusters, col = col.pal)
 
-write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v3.csv")
-
-###############
-{
-# Read and prepare "landscapes_overview.xlsx"
-library(readxl)
-table = read_excel("Data/20240207_landscapes_overview.xlsx")
-colnames(table)[3:ncol(table)] = table[1,3:ncol(table)]
-table = table[-1,]
-table[table == "-"] = NA
-table = data.frame(table)
-for (i in 3:ncol(table))
-  table[,i] = as.numeric(table[,i])
-for (i in 1:nrow(table)){
-  g = table$PAH.genotype[i]
-  g = strsplit(g, "-")[[1]][1]
-  g = strsplit(g, "\\+")[[1]][1]
-  g = strsplit(g, "/")[[1]]
-  if (g[1] == "WT")
-    g = "WT"
-  else
-    g = paste0(g[1], "-", g[2])
-  table$PAH.genotype[i] = g
-}
-colnames(table)[1] = "genotype"
-
-response_rate_1 = table$Yes...
-response_rate_1[is.na(response_rate_1)] = -100
-response_rate_1 = response_rate_1 / 100
-table$response_rate_1 = response_rate_1
-table$response_rate_1[response_rate_1 == -1] = NA
-
-# Merge
-# Merge the two tables
-table$genotype_exp = paste0(table$genotype, "|", table$EXPERIMENT)
-XX$genotype_exp = paste0(XX$genotype, "|", XX$experiment)
-table = merge(table, XX, by = "genotype_exp", suffixes=c("", ".y"))
-}
-
-XX = table[,c("genotype", "experiment", "x", "y", "z", "response_rate_1", "clusters")]
-c = "clusters"
-boxplot(
-  XX$response_rate_1[XX[, c] == 1],
-  XX$response_rate_1[XX[, c] == 2],
-  XX$response_rate_1[XX[, c] == 3],
-  XX$response_rate_1[XX[, c] == 4],
-  # XX$response_rate_1[XX[, c] == 5],
-  # XX$response_rate_1[XX[, c] == 6],
-  names = c(1, 2, 3, 4),
-  main = paste0("Response in clusters:", c)
-)
-
-
+write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v5.csv")
