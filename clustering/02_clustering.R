@@ -26,9 +26,9 @@ X = data.frame(
 )
 
 # Clustering
-filter = (X$x < 1400) & (X$y < 200)
+filter = ((X$x > 1400) | (X$y > 170)) & (X$z < log(.5))
 plot(X[,2], X[,3], pch = 19, col = ifelse(filter, "green", "red"))
-X = X[filter,]
+X = X[!filter,]
 
 # X$z = exp(X$z)
 X_scaled = data.frame(scale(X[,-1]))
@@ -67,4 +67,4 @@ scatter3D(data_with_cluster$Max_x, data_with_cluster$Max_y, data_with_cluster$Ma
           pch = 19, cex = 1, theta = 0, phi = 90, box = TRUE, 
           colvar = data_with_cluster$clusters, col = col.pal)
 
-write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v5.csv")
+write.csv(data_with_cluster[,-c(2)], "Data/Clustering_Result_final_v6.csv")

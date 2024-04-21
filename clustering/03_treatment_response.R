@@ -4,7 +4,7 @@ rm(list = ls())
 setwd("~/Desktop/My_Codes/Phenylketonuria/")
 library(plot3D)
 
-data = read.csv("Data/Clustering_Result_final_v5.csv")
+data = read.csv("Data/Clustering_Result_final_v6.csv")
 
 {
   # Read and prepare "landscapes_overview.xlsx"
