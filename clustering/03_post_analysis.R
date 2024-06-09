@@ -1,15 +1,16 @@
 # Step3. treatment response
 
 rm(list = ls())
-setwd("~/Desktop/My_Codes/Phenylketonuria/")
+setwd("~/Desktop/My_Codes/Phenylketonuria/clustering/")
 library(plot3D)
+library(ggplot2)
 
-data = read.csv("Data/Clustering_Result_final_v6.csv")
+data = read.csv("data/clustering_result.csv")
 
 {
   # Read and prepare "landscapes_overview.xlsx"
   library(readxl)
-  table = read_excel("Data/20240207_landscapes_overview.xlsx")
+  table = read_excel("../Data/20240207_landscapes_overview.xlsx")
   colnames(table)[3:ncol(table)] = table[1,3:ncol(table)]
   table = table[-1,]
   table[table == "-"] = NA
@@ -45,7 +46,13 @@ data = read.csv("Data/Clustering_Result_final_v6.csv")
 X = table[,c("genotype", "experiment", "Max_theory", "Max_x", "Max_y", "response_rate_1", "clusters")]
 X_response = X[!is.na(X$response_rate_1),]
 
-col.pal = grDevices::rainbow(length(unique(X$clusters)))
+# Scatter plot
+order = c(0, 2, 5, 1, 3, 4)
+col.pal = c("red", "orange", "green", "skyblue", "blue", "magenta")
+# col.pal = grDevices::rainbow(length(unique(X$clusters)))
+X$clusters[X$clusters == 6] = 2
+# X = X[X$clusters > 0,]
+
 scatter3D(X$Max_x, X$Max_y, log(X$Max_theory) , pch = 19, cex = 1, main = "Clusters of all samples", 
           theta = 10, phi = 0, box = TRUE, colvar = X$clusters, col = col.pal)
 
@@ -53,27 +60,31 @@ scatter3D(X$Max_x, X$Max_y, log(X$Max_theory) , pch = 19, cex = 1, main = "Clust
           theta = 0, phi = 90, box = TRUE, colvar = X$clusters, col = col.pal)
 
 
+# Response box plot
 c = "clusters"
 boxplot(
   X_response$response_rate_1[X_response[, c] == 0],
   X_response$response_rate_1[X_response[, c] == 2],
+  X_response$response_rate_1[X_response[, c] == 5],
   X_response$response_rate_1[X_response[, c] == 1],
   X_response$response_rate_1[X_response[, c] == 3],
   X_response$response_rate_1[X_response[, c] == 4],
-  names = c(0, 2, 1, 3, 4),
-  main = paste0("Response in clusters:", c)
+  names = order
 )
 
-c = "clusters"
-boxplot(
-  X_response$response_rate_1[X_response[, c] == 0],
-  X_response$response_rate_1[X_response[, c] == 2],
-  X_response$response_rate_1[X_response[, c] == 4],
-  X_response$response_rate_1[X_response[, c] == 1],
-  X_response$response_rate_1[X_response[, c] == 3],
-  names = c(0, 2, 4, 1, 3),
-  main = paste0("Response in clusters:", c)
-)
+X_response_no6 = X_response[X_response$clusters < 6,]
+X_response_no6$clusters_factor = factor(X_response_no6$clusters, 
+                                        levels = order)
+ggplot(X_response_no6, aes(x=clusters_factor, y=response_rate_1, color=clusters_factor)) + 
+  geom_boxplot(fill="gray95", size = .6) + 
+  geom_point() +
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  scale_color_manual(values = col.pal[order+1]) + 
+  theme_classic() +
+  theme(legend.position="none")
+
+
+
 
 
 

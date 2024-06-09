@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 2.1.0
+    Version 2.2.0
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -33,7 +33,6 @@ import matplotlib.colors as colors
 eps = 0.000001
 
 # ======================== Helper functions (utilities) ==============================
-
 ## read experiment files
 def read_experiments(exp):
 
@@ -115,6 +114,7 @@ def plot_landscape(
     legend=[True, True, True, True],
     legend_vals=None,
     is_log = False,
+    popt = None,
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -158,6 +158,17 @@ def plot_landscape(
         print("Error: ", e)
         sys.exit()
 
+    
+    if popt is not None:
+        eps = .000001
+        a, mx, my, sx, sy = tuple(popt)
+        x, y = np.log(B1 + eps), np.log(B2 + eps)
+        z_smoothed = gaussian_2d((x, y), a, mx, my, sx, sy)
+        z_smoothed[z_smoothed < 0] = 0
+
+        max = legend_vals['Max_theory'] * 100
+        z_smoothed = z_smoothed * max / a
+    
     fig, ax = plt.subplots(figsize=(6, 5))
     if rescale:
         im = ax.pcolormesh(
@@ -301,6 +312,8 @@ def plot_3d_map(
     max_val_scale=None,
     legend=[True, True, True, True],       # legend here is not being used. Used in plot_3dsurf()
     is_log = False,
+    popt = None,
+    legend_vals=None,
 ):
     x_dense = np.linspace(0, x.max(), nbins)
     y_dense = np.linspace(0, y.max(), nbins)
@@ -331,7 +344,7 @@ def plot_3d_map(
                 fill_value=0.0,
             )
             Z_rgi = rgi(np.array([B1.flatten(), B2.flatten()]).T).reshape(B1.shape)
-            z_smoothed = ndimage.gaussian_filter(Z_rgi, sigma=7)
+            z_smoothed = ndimage.gaussian_filter(Z_rgi, sigma=7)   # 7
             z_smoothed[z_smoothed < 0] = 0
             # z_smoothed[z_smoothed > 100] = 100
 
@@ -343,6 +356,17 @@ def plot_3d_map(
     except NotImplementedError as e:
         print("Error: ", e)
         sys.exit()
+
+    
+    if popt is not None:
+        eps = .000001
+        a, mx, my, sx, sy = tuple(popt)
+        x, y = np.log(B1 + eps), np.log(B2 + eps)
+        z_smoothed = gaussian_2d((x, y), a, mx, my, sx, sy)
+        z_smoothed[z_smoothed < 0] = 0
+
+        max = legend_vals['Max_theory'] * 100
+        z_smoothed = z_smoothed * max / a
 
     fig = plt.figure(figsize=(6, 5))
     ax = fig.add_subplot(111, projection="3d")
@@ -602,12 +626,12 @@ if __name__ == "__main__":
             ##### Calculate 50% max values
             max_practice = np.max(z_hat) / max_wt_model
             max_theory = a / max_wt_model
-            x_max, x_min, y_max, y_min = half_max(max_practice, max_theory, mx, my, sx, sy)
+            x_max, x_min, y_max, y_min = half_max(max_theory, max_theory, mx, my, sx, sy)
             
             ##### Add all the values into a dictionary
             values = {
                 'Max_practice' : np.round(max_practice, 2),
-                'Max_theory'   : np.round(np.max(max_theory), 2),
+                'Max_theory'   : np.round(max_theory, 2),
                 'Max_x'        : np.round(np.exp(mx) ,2),
                 'Max_y'        : np.round(np.exp(my) ,2),
                 's_x'          : np.round(np.exp(sx) ,2),
@@ -629,11 +653,11 @@ if __name__ == "__main__":
                 plot_landscape(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                                show = False, save = True, save_dir = save_image2d_dir,
                                method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
-                               legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values)
+                               legend=[info_box, max_val, peak_coords, fifty_coords], legend_vals = values, popt = popt)
             if save_plot3d:
                 plot_3d_map(np.exp(x), np.exp(y), z_hat, name = name + "_model",
                             show=False, save=True, save_dir = save_image3d_dir,
-                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale,
+                            method=sm_method, rescale=rescale, max_val_scale=max_val_scale, popt = popt, legend_vals = values,
                             elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
 
             if plot_extra:
@@ -647,6 +671,7 @@ if __name__ == "__main__":
                                 show=False, save=True, save_dir = save_image3d_dir,
                                 method=sm_method, rescale=rescale, max_val_scale=max_val_scale, is_log = True,
                                 elev=elev, azim=azim, nbins=nbins, legend=[info_box, max_val, peak_coords, fifty_coords])
+
 
             #### 5. QC check
             if (rmse <= qc_thr_rmse[0]) and (n_peaks <= qc_thr_n_peaks[0]) and (variation <= qc_thr_variation[0]):

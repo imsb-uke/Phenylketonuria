@@ -61,8 +61,6 @@ non_responders = c(
   "IVS10-IS10"
 )
 
-
-
 data$response_available = rep(1, nrow(data))
 data$response_available[data$genotype %in% non_responders] = 0
 
@@ -70,5 +68,5 @@ data$response_available[data$genotype %in% non_responders] = 0
 data = data[, -c(18, 19)]
 
 # Save as csv
-write.csv(data, "Data/data_processed_6.csv")
+write.csv(data, "clustering/data/data_processed.csv")
 

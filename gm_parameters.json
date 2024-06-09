@@ -1,7 +1,7 @@
 {
-    "save_image2d_dir": "gm_output/images2d/",
-    "save_image3d_dir": "gm_output/images3d/", 
-    "save_feature_dir": "gm_output/features/", 
+    "save_image2d_dir": "test/gm_output/images2d/",
+    "save_image3d_dir": "test/gm_output/images3d/", 
+    "save_feature_dir": "test/gm_output/features/", 
     "tag": "", 
     "qc_thr_rmse": [0.2, 0.25], 
     "qc_thr_n_peaks": [5, 8], 
