@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 2.2.0
+    Version 2.2.1
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -18,6 +18,7 @@ import os
 from tqdm import tqdm
 import argparse
 import json
+import re
 
 import pandas as pd
 import numpy as np
@@ -61,7 +62,8 @@ def read_experiments(exp):
     for fp in tqdm(fps):
         # fp = os.path.join(exp, wb)
         xl = pd.ExcelFile(fp)
-        sheets = [sheet for sheet in xl.sheet_names if "-av" in sheet]
+        # sheets = [sheet for sheet in xl.sheet_names if "-av" in sheet]
+        sheets = [sheet for sheet in xl.sheet_names if len(re.findall("-av$", sheet))]
         exp_name = fp.split("/")[-1].split("_")[1].split(".")[0]
         dict_data[exp_name] = {}
         for sheet in sheets:
