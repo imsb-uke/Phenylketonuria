@@ -50,12 +50,28 @@ X = table[,c("genotype", "experiment", "Max_theory", "Max_x", "Max_y", "response
 X_response = X[!is.na(X$response_rate_1),]
 
 # Scatter plot
-order = c(0, 2, 5, 1, 3, 4)
+order = c(0, 1, 2, 3, 4, 5)
 col.pal = c("red", "orange", "green", "skyblue", "blue", "magenta")
+col.pal = c("#2C1453", "#A48AD3", "#1CC5FE", "#6FC7CF", "#FBA27D", "#FB7D80")
 # col.pal = grDevices::rainbow(length(unique(X$clusters)))
 X$clusters[X$clusters == 6] = 2
 # X = X[X$clusters > 0,]
 
+X$clusters_new = rep(0, nrow(X))
+for (i in 1:nrow(X)){
+  c = X$clusters[i]
+  
+  if (c==0) c_new = 0
+  if (c==1) c_new = 1
+  if (c==2) c_new = 4
+  if (c==3) c_new = 2
+  if (c==4) c_new = 5
+  if (c==5) c_new = 3
+  
+  X$clusters_new[i] = c_new
+}
+
+X$clusters = X$clusters_new
 
 pdf(file = "Clusters.pdf", width = 5, height = 5)
 
@@ -66,6 +82,7 @@ scatter3D(X$Max_x, X$Max_y, log(X$Max_theory) , pch = 19, cex = 1, main = "Clust
           theta = 0, phi = 90, box = TRUE, colvar = X$clusters, col = col.pal)
 
 XX = X[X$clusters > 0,]
+col.pal = col.pal[-1]
 scatter3D(XX$Max_x, XX$Max_y, log(XX$Max_theory) , pch = 19, cex = 1, main = "Clusters of all samples", 
           theta = 10, phi = 0, box = TRUE, colvar = XX$clusters, col = col.pal)
 

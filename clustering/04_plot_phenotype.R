@@ -51,8 +51,8 @@ X = table[,c("genotype", "experiment", "Max_theory", "Max_x", "Max_y", "pheno", 
 X_pheno = X[!is.na(X$pheno),]
 
 order = c(0, 2, 5, 1, 3, 4)
+col.pal = c("#2C1453", "#A48AD3", "#1CC5FE", "#6FC7CF", "#FBA27D", "#FB7D80")
 col.pal = c("red", "orange", "green", "skyblue", "blue", "magenta")
-
 
 # pheno box plot
 X_pheno_no6 = X_pheno[X_pheno$clusters < 6,]
@@ -72,6 +72,11 @@ dev.off()
 
 
 
-
-
-
+# col.pal = c(
+#   rgb(44/255, 20/255, 83/255),
+#   rgb(164/255, 138/255, 211/255),
+#   rgb(28/255, 197/255, 254/255),
+#   rgb(111/255, 199/255, 207/255),
+#   rgb(251/255, 162/255, 125/255),
+#   rgb(251/255, 125/255, 128/255)
+# )
