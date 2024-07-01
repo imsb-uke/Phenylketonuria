@@ -16,6 +16,7 @@ scipy
 matplotlib
 openpyxl
 tqdm
+scikit-learn      # needed for prediction only
 ```
 To run the pipeline use the script ```gm.py```, which requres experimant files as ```*.xlsm```.
 
@@ -55,4 +56,9 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 * ```fifty_coords```: Binary value to add the coordinates of the 50% of the maximum value to the information ;```default=True```,
 * ```plot_replicates```: Binary value to plot and save data for all the replicates;```default=False```
 * ```plot_extra"```: Binary value to plot and save the data in the log scale';```default=False```
+
+**Predict for new data:**
+When we have new data samples, the script ```predict.py``` can be used to predict the lables of clusters for each sample. 
+
+as in the following 
 
