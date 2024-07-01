@@ -60,9 +60,9 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 **Predict for new data:**
 When we have new data samples, the script ```predict.py``` can be used to predict the lables of clusters for each sample.
 
-Example) run the pipeline for one experimant
+Example)
 ```
-ython predict.py --train_data_dir clustering/data/clustering_result.csv --new_data_dir gm_output/features/extracted_features.csv
+python predict.py --train_data_dir clustering/data/clustering_result.csv --new_data_dir gm_output/features/extracted_features.csv
 ```
 
 **Promp terminal parameters:**
