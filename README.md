@@ -32,7 +32,7 @@ python gm.py --input_dir Data/experiments_all
 **Promp terminal parameters:**
 * ```--input_dir```: input directiry. Either a ```*.xlsm``` file or a folder containing them.
 * ```--param_dir```: directory to parameters json file (see below).
-* ```no_plot```: no plot will be created if apecified.
+* ```--no_plot```: no plot will be created if apecified.
 
 A parameter *.json* file is also needed to specify the parameters. By default the json file should be in the same folder as the ```gm.py``` named ```gm_parameters.json```. You can change this by the parameter ```--param_dir```.
 
@@ -58,7 +58,15 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 * ```plot_extra"```: Binary value to plot and save the data in the log scale';```default=False```
 
 **Predict for new data:**
-When we have new data samples, the script ```predict.py``` can be used to predict the lables of clusters for each sample. 
+When we have new data samples, the script ```predict.py``` can be used to predict the lables of clusters for each sample.
 
-as in the following 
+Example) run the pipeline for one experimant
+```
+ython predict.py --train_data_dir clustering/data/clustering_result.csv --new_data_dir gm_output/features/extracted_features.csv
+```
+
+**Promp terminal parameters:**
+* ```--train_data_dir```: Train data directory; the output of the clustering pipeline provided in *R*.
+* ```--new_data_dir```: New data directory; the output of the gm.py for the train data.
+* ```--k```: Number of neighbours *k* in *KNN*.
 

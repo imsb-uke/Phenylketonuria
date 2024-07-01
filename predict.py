@@ -1,6 +1,6 @@
 """
     Predict labels for new samples
-    Version 2.2.1
+    Version 1.0.0
     Author:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
     Scientific Contributor:
