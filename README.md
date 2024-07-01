@@ -57,7 +57,9 @@ A parameter *.json* file is also needed to specify the parameters. By default th
 * ```plot_replicates```: Binary value to plot and save data for all the replicates;```default=False```
 * ```plot_extra"```: Binary value to plot and save the data in the log scale';```default=False```
 
-**Predict for new data:**
+
+
+## Predict for new data
 When we have new data samples, the script ```predict.py``` can be used to predict the lables of clusters for each sample.
 
 Example)
