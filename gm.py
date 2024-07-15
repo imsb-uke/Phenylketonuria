@@ -1,6 +1,6 @@
 """
     Gaussian Modelling and feature extraction
-    Version 2.2.1
+    Version 2.2.2
     Authors:
         - Behnam Yousefi (behnm.yousefi@zmnh.uni-hamburg.de; yousefi.bme@gmail.com)
         - Robin Khatri (robin.khatri@zmnh.uni-hamburg.de)
@@ -690,8 +690,10 @@ if __name__ == "__main__":
     # Save features table
     if len(dict_data.keys()) > 1:
         n = ""
+        
     else:
-        n = "_" + name
+        file_name = dir.split("/")[-1].split(".")[0]
+        n = "_" + file_name
 
     if tag == "":
         t = ""
