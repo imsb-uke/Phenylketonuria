@@ -491,6 +491,9 @@ if __name__ == "__main__":
     save_image2d_dir = parameters['save_image2d_dir']
     save_image3d_dir = parameters['save_image3d_dir']
     tag = parameters['tag']
+    ### curve fitting bonds
+    max_x_curve_fitting = parameters['max_x']
+    max_y_curve_fitting = parameters['max_y']
     ### QC thresholds
     qc_thr_rmse = parameters['qc_thr_rmse']
     qc_thr_n_peaks = parameters['qc_thr_n_peaks']
@@ -615,7 +618,7 @@ if __name__ == "__main__":
             x, y, z = np.log(x + eps), np.log(y + eps), z
             initial_guess = (1.0, 5, 5, 2, 2)
             bounds = ([0, eps, eps, 0.5, 0.5],                       # Lower bounds
-                      [120, np.log(1500), np.log(200), 1000, 1000])  # Upper bounds
+                      [120, np.log(max_x_curve_fitting), np.log(max_y_curve_fitting), 1000, 1000])  # Upper bounds
             popt, pcov = curve_fit(gaussian_2d, (x, y), z, p0=initial_guess, bounds=bounds)
 
             a, mx, my, sx, sy = tuple(popt)
