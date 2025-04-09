@@ -498,6 +498,9 @@ if __name__ == "__main__":
     qc_thr_rmse = parameters['qc_thr_rmse']
     qc_thr_n_peaks = parameters['qc_thr_n_peaks']
     qc_thr_variation = parameters['qc_thr_variation']
+    ### Normal activity window
+    physiological_window_x = parameters['physiological_window_x']
+    physiological_window_y = parameters['physiological_window_y']
     ### 3D plot parameters
     sm_method = parameters['sm_method']
     rescale = parameters['rescale']
@@ -530,7 +533,7 @@ if __name__ == "__main__":
     # Define the empty feature tables
     feature = pd.DataFrame(columns=['genotype', 'experiment', 'Max_practice', 'Max_theory', 'Max_x', 'Max_y', 
                                     's_x', 's_y', 'Half_x_min', 'Half_x_max', 'Half_y_min', 'Half_y_max',
-                                    'rmse', 'n_peaks', 'variation', 'qc_result'])
+                                    'rmse', 'n_peaks', 'variation', 'qc_result', 'physio_activity'])
 
     # Read the input files as a dict
     print('Read the input data ...')
@@ -632,6 +635,14 @@ if __name__ == "__main__":
             max_practice = np.max(z_hat) / max_wt_model
             max_theory = a / max_wt_model
             x_max, x_min, y_max, y_min = half_max(max_theory, max_theory, mx, my, sx, sy)
+
+            ##### Physiological activity
+            x_grid = np.linspace(physiological_window_x[0], physiological_window_x[1], 10)
+            y_grid = np.linspace(physiological_window_y[0], physiological_window_y[1], 10)
+            x_grid = np.log(x_grid + eps)
+            y_grid = np.log(y_grid + eps)
+            z_physio = gaussian_2d((x_grid, y_grid), a, mx, my, sx, sy)
+            z_physio_max = z_physio.max()
             
             ##### Add all the values into a dictionary
             values = {
@@ -687,7 +698,7 @@ if __name__ == "__main__":
                 qc_result = 'ToCheck'
 
             #### Save features
-            feature.loc[len(feature)] = [var, exp] + list(values.values()) + [rmse, n_peaks, variation, qc_result]
+            feature.loc[len(feature)] = [var, exp] + list(values.values()) + [rmse, n_peaks, variation, qc_result, z_physio_max]
     # End of the loop
 
     # Save features table
