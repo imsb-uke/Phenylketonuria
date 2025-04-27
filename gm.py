@@ -643,6 +643,7 @@ if __name__ == "__main__":
             y_grid = np.log(y_grid + eps)
             z_physio = gaussian_2d((x_grid, y_grid), a, mx, my, sx, sy)
             z_physio_max = z_physio.max()
+            z_physio_max = z_physio_max / max_wt_model
             
             ##### Add all the values into a dictionary
             values = {
